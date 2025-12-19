@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
+#include <ctime>
 using namespace std;
 
 class State {
@@ -28,16 +29,17 @@ private:
     
     
     int GetDropRow(vector<vector<char>> board, int col);
-    void checkGameState(vector<vector<char>> board,int lastMoveRow,int column_chosen, State &state);
+    bool checkGameState(vector<vector<char>> board,int lastMoveRow,int column_chosen, State &state);
     int applyMove(vector<vector<char>> &board, int col, char player);
-    bool ExpectimaxCanWin(vector<vector<char>> board, char player);
+    bool OppenentCanWin(vector<vector<char>> board, char player);
     bool checkWin(vector<vector<char>> board,int lastMoveRow,int col, char player);
     void WhoWon(vector<vector<char>> board,int lastMoveRow,int column_chosen, char player);
     void wayOfWinning(vector<vector<char>> board,int lastMoveRow,int column_chosen, char player);
     bool isBoardFull(vector<vector<char>> board);
 
     
-    int evaluateBoard(vector<vector<char>> board,int row,int col, char player);
+    int evaluateMinimax(vector<vector<char>> board,int row,int col, char player);
+    int evaluateExpectimax(vector<vector<char>> board,int row,int col, char player);
     
     int countHorizontal(vector<vector<char>> board, int row, int col, char player);
     int countVertical(vector<vector<char>> board, int row, int col, char player);
@@ -86,12 +88,13 @@ int Connect_4::countHorizontal(vector<vector<char>> board, int row, int col, cha
             break;
         }
     }
-    if(count>=4){
-        return 10000;
-    }
-    else{
-        return count;
-    }
+    // if(count>=4){
+    //     return 10000;
+    // }
+    // else{
+    //     return count;
+    // }
+    return count;
 }
 int Connect_4::countVertical(vector<vector<char>> board, int row, int col, char player) {
     int count = 0;
@@ -103,12 +106,13 @@ int Connect_4::countVertical(vector<vector<char>> board, int row, int col, char 
             break;
         }
     }
-    if(count>=4){
-        return 10000;
-    }
-    else{
-        return count;
-    }   
+    // if(count>=4){
+    //     return 10000;
+    // }
+    // else{
+    //     return count;
+    // }
+    return count;   
 }
 int countDiagonalLToR(vector<vector<char>> board, int row, int col, char player) {
     int count = 0;
@@ -130,12 +134,13 @@ int countDiagonalLToR(vector<vector<char>> board, int row, int col, char player)
             break;
         }
     }
-    if(count>=4){
-        return 10000;
-    }
-    else{
-        return count;
-    }
+    // if(count>=4){
+    //     return 10000;
+    // }
+    // else{
+    //     return count;
+    // }
+    return count;
 }
 int countDiagonalRToL(vector<vector<char>> board, int row, int col, char player) {
     int count = 0;
@@ -157,12 +162,13 @@ int countDiagonalRToL(vector<vector<char>> board, int row, int col, char player)
             break;
         }
     }
-    if(count>=4){
-        return 10000;
-    }
-    else{
-        return count;
-    }
+    // if(count>=4){
+    //     return 10000;
+    // }
+    // else{
+    //     return count;
+    // }
+    return count;
 }
 
 bool Connect_4::checkWin(vector<vector<char>> board,int lastMoveRow,int column_chosen, char player) {
@@ -199,7 +205,7 @@ int Connect_4::applyMove(vector<vector<char>> &board, int col, char player) {
     return -1; // Column is full
 }
 
-bool Connect_4::ExpectimaxCanWin(vector<vector<char>> board, char player){
+bool Connect_4::OppenentCanWin(vector<vector<char>> board, char player){
     char opponent = (player == 'R') ? 'Y' : 'R';
     // التحقق من كل الأعمدة إذا كان اللاعب يقدر يفوز في الحركة الجاية
     for(int col=0;col<7;col++){
@@ -219,34 +225,45 @@ bool Connect_4::ExpectimaxCanWin(vector<vector<char>> board, char player){
     return false;
 }
 
-int Connect_4::evaluateBoard(vector<vector<char>> board,int row,int col, char player) {
+int Connect_4::evaluateMinimax(vector<vector<char>> board,int row,int col, char player) {
     int h=countHorizontal(board, row, col, player);
     int v=countVertical(board, row, col, player);
     int d1=countDiagonalLToR(board, row, col, player);
     int d2=countDiagonalRToL(board, row, col, player);
-    if(h==10000||v==10000||d1==10000||d2==10000){
+    if(h==4||v==4||d1==4||d2==4){
         return 10000;
     }
-    // اذا كان اللاعب يقدر يفوز في الحركة الجاية
-    if(player=='R'){
-        if(ExpectimaxCanWin(board,player)){
-            return 5000;
-        }
+    int score=0;
+    score=h+v+d1+d2;
+    // إذا كانت هذه الحركة تمنع الخصم من الفوز في الحركة التالية، أعطِ قيمة عالية بالإضافة إلى score
+    if(OppenentCanWin(board,player)){
+        return -5000 + score;
     }
-    // else{
-    //     if(MinimaxCanWin(board,player)){
-    //         return 5000;
-    //     }
-    // }
 
+    return score;
+}
+
+int Connect_4::evaluateExpectimax(vector<vector<char>> board,int row,int col, char player) {
+    int h=countHorizontal(board, row, col, player);
+    int v=countVertical(board, row, col, player);
+    int d1=countDiagonalLToR(board, row, col, player);
+    int d2=countDiagonalRToL(board, row, col, player);
+    if(h>=4||v>=4||d1>=4||d2>=4){
+        return 10000;
+    }
+    // else if(OppenentCanWin(board,player)){
+    //     return -5000;
+    // }
     int score=0;
     score=h+v+d1+d2;
     return score;
 }
+
 int Connect_4::minimaxPlay(vector<vector<char>> board, State &state) {
     int column_chosen;
     vector<int> valid_columns;
     int max=-1;
+    vector<int> best_cols;
     vector<vector<char>> temp_board=board;
     // for(int row=5;row<=0;row--){
         // الاعمدة الي ليست ممتلئة
@@ -255,8 +272,10 @@ int Connect_4::minimaxPlay(vector<vector<char>> board, State &state) {
                 valid_columns.push_back(col);
             }
         }
+        // إذا كانت اللوحة فارغة او تحتوي على حركة واحدة، اختر عشوائي
+        vector<int> random_cols;
         for(int col:valid_columns){
-            
+            // النتيجة في كل عمود بعد المحاولة
             int score=0;
             int row= GetDropRow(temp_board,col);
             if(row!=-1){
@@ -266,23 +285,46 @@ int Connect_4::minimaxPlay(vector<vector<char>> board, State &state) {
                 // العمود ممتلئ، تخطي هذه الحركة
                 continue;
             }
+            
             // حساب عدد القطع المتصلة
-            score= evaluateBoard(temp_board,row,col,state.current_player);
-            if(score>max){
-                max=score;
-                column_chosen=col;
+            score= evaluateMinimax(temp_board,row,col,state.current_player);
+            cout << "Minimax evaluating col " << col << ": score = " << score << endl;
+            // cout << "Minimax evaluating col " << col << ": score = " << score << endl;
+            if(score==0||score==1){
+                random_cols.push_back(col);
             }
+            if(score > max){
+                max = score;
+                best_cols.clear();
+                best_cols.push_back(col);
+            } else if(score == max){
+                best_cols.push_back(col);
+            }
+
             // رجع اللوحة إلى حالتها الأصلية
             temp_board[row][col]=' ';
             
+        }
+        // اختر عشوائي من أفضل العواميد
+        if(!best_cols.empty()){
+            int random_index = rand() % best_cols.size();
+            column_chosen = best_cols[random_index];
+        }
+        // cout << "Minimax chose col " << column_chosen << " with max score " << max << endl;
+        if(!random_cols.empty()&&max<=1){
+            int random_index=rand()%random_cols.size();
+            column_chosen=random_cols[random_index];
+            // cout << "Randomly chose from low scores: " << column_chosen << endl;
         }
     // }
     return column_chosen;
 }
 int Connect_4::expectimaxPlay(vector<vector<char>> board, State &state) {
+    // cout << "Expectimax is calculating the best move..." << endl;
     int column_chosen;
     vector<int> valid_columns;
-    int bestValue=-1;
+    double bestValue=-10000.0;
+    vector<int> best_cols;
     // for(int row=5;row<=0;row--){
         // الاعمدة الي ليست ممتلئة
         for(int col=0;col<7;col++){
@@ -290,6 +332,8 @@ int Connect_4::expectimaxPlay(vector<vector<char>> board, State &state) {
                 valid_columns.push_back(col);
             }
         }
+        // إذا كانت اللوحة فارغة او تحتوي على حركة واحدة، اختر عشوائي
+        vector<int> random_cols;
         for(int col:valid_columns){
             vector<vector<char>> temp_board1=board;
             
@@ -303,12 +347,13 @@ int Connect_4::expectimaxPlay(vector<vector<char>> board, State &state) {
                 continue;
             }
             // حساب عدد القطع المتصلة
-            ownScore= evaluateBoard(temp_board1,row,col,state.current_player);
+            ownScore= evaluateExpectimax(temp_board1,row,col,state.current_player);
             // حساب نقاط الخصم
             char opponent = (state.current_player == 'R') ? 'Y' : 'R';
             double sumOppScores=0;
             double opponentScore=0;
             int numOppMoves=0;
+            double score=ownScore;
             for(int oppCol = 0; oppCol < 7; oppCol++){
                 int oppRow = GetDropRow(temp_board1, oppCol);
 
@@ -316,22 +361,63 @@ int Connect_4::expectimaxPlay(vector<vector<char>> board, State &state) {
 
                 temp_board1[oppRow][oppCol] = opponent;
 
-                opponentScore = evaluateBoard(temp_board1, oppRow, oppCol, opponent);
+                opponentScore = evaluateExpectimax(temp_board1, oppRow, oppCol, opponent);
 
                 sumOppScores += opponentScore;
                 numOppMoves++;
                 temp_board1[oppRow][oppCol]=' ';
             }
-            double avgOppScore = sumOppScores / numOppMoves;
-            double score = ownScore - avgOppScore;
-            if(score>bestValue){
-                bestValue=score;
-                column_chosen=col;
+            bool opponentCanWin = false;
+
+            for(int oppCol = 0; oppCol < 7; oppCol++){
+                int oppRow = GetDropRow(temp_board1, oppCol);
+                if(oppRow == -1) continue;
+
+                temp_board1[oppRow][oppCol] = opponent;
+
+                if(checkWin(temp_board1, oppRow, oppCol, opponent)){
+                    opponentCanWin = true;
+                    temp_board1[oppRow][oppCol] = ' ';
+                    break;
+                }
+
+                temp_board1[oppRow][oppCol] = ' ';
             }
-            // رجع اللوحة إلى حالتها الأصلية
-            
-            
+
+            if(opponentCanWin){
+                score = -5000;   // استبعاد الحركة
+            }
+            else{
+                double avgOppScore = sumOppScores / numOppMoves;
+                score = ownScore - avgOppScore;
+            }
+            if(score > bestValue){
+                bestValue = score;
+                best_cols.clear();
+                best_cols.push_back(col);
+            } else if(score == bestValue){
+                best_cols.push_back(col);
+            }
+            // إذا كانت اللوحة فارغة، اختر عشوائي
+
+            cout << "Expectimax evaluating col " << col << ": score = " << score << endl;
+            if(score==0||score==1){
+                random_cols.push_back(col);
+
+            }
         }
+        // اختر عشوائي من أفضل العواميد
+        if(!best_cols.empty()){
+            int random_index = rand() % best_cols.size();
+            column_chosen = best_cols[random_index];
+        }
+        // cout << "Minimax chose col " << column_chosen << " with max score " << max << endl;
+        if(!random_cols.empty()&&bestValue<=1){
+            int random_index=rand()%random_cols.size();
+            column_chosen=random_cols[random_index];
+            // cout << "Randomly chose from low scores: " << column_chosen << endl;
+        }
+
     // }
     return column_chosen;
 }
@@ -341,11 +427,13 @@ int Connect_4::expectimaxPlay(vector<vector<char>> board, State &state) {
 void Connect_4::wayOfWinning(vector<vector<char>> board,int lastMoveRow,int column_chosen, char player){
     if(countHorizontal(board, lastMoveRow, column_chosen, player)>=4){
         if(player=='R'){
+            
             minHorizontalWins++;
         }
         else{
             expHorizontalWins++;
         }
+        cout << "HorizontalWins" << endl;
     }
     if(countVertical(board, lastMoveRow, column_chosen, player)>=4){
         if(player=='R'){
@@ -354,6 +442,7 @@ void Connect_4::wayOfWinning(vector<vector<char>> board,int lastMoveRow,int colu
         else{
             expVerticalWins++;
         }
+        cout << "VerticalWins" << endl;
     }
     if(countDiagonalLToR(board, lastMoveRow, column_chosen, player)>=4){
         if(player=='R'){
@@ -362,6 +451,7 @@ void Connect_4::wayOfWinning(vector<vector<char>> board,int lastMoveRow,int colu
         else{
             expDiagonalLtoRWins++;
         }
+        cout << "DiagonalLtoRWins" << endl;
     }
     if(countDiagonalRToL(board, lastMoveRow, column_chosen, player)>=4){
         if(player=='R'){
@@ -370,6 +460,7 @@ void Connect_4::wayOfWinning(vector<vector<char>> board,int lastMoveRow,int colu
         else{
             expDiagonalRtoLWins++;
         }
+        cout << "DiagonalRtoLWins" << endl;
     }
 
 }
@@ -394,16 +485,19 @@ bool Connect_4::isBoardFull(vector<vector<char>> board) {
     }
     return true; // No empty spaces found, board is full
 }
-void Connect_4::checkGameState(vector<vector<char>> board,int lastMoveRow,int column_chosen, State &state){
+bool Connect_4::checkGameState(vector<vector<char>> board,int lastMoveRow,int column_chosen, State &state){
     if(checkWin(board,lastMoveRow,column_chosen ,state.current_player)){
         WhoWon(board,lastMoveRow,column_chosen ,state.current_player);
 
-        return;
+        return true;
     }
     else if(isBoardFull(board)){
         // state.is_terminal=true;
         cout << "The game is a draw!" << endl;
-        return;
+        return true;
+    }
+    else{
+        return false;
     }
 }
 
@@ -441,7 +535,10 @@ void Connect_4::startGame(vector<vector<char>> board, State &state) {
         }
         int lastMoveRow=applyMove(board, column_chosen, state.current_player);
         printBoard(board);
-        checkGameState(board,lastMoveRow ,column_chosen,state);
+        
+        if(checkGameState(board,lastMoveRow ,column_chosen,state)){
+            break;
+        }
         state.current_player = (state.current_player == 'R' ? 'Y' : 'R');
     }
     
@@ -449,6 +546,7 @@ void Connect_4::startGame(vector<vector<char>> board, State &state) {
 }
 
 int main() {
+    srand(time(NULL)); // Initialize random seed
     Connect_4 game;
     State state;
 
